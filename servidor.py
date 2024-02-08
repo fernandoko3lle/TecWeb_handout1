@@ -1,7 +1,16 @@
 import socket
+from pathlib import Path
+from utils import extract_route, read_file, load_data
 
+CUR_DIR = Path(__file__).parent
 SERVER_HOST = '127.0.0.1'
 SERVER_PORT = 8080
+
+NOTE_TEMPLATE = '''  <li>
+    <h3>{title}</h3>
+    <p>{details}</p>
+  </li>
+'''
 
 RESPONSE_TEMPLATE = '''HTTP/1.1 200 OK
 
@@ -13,8 +22,15 @@ RESPONSE_TEMPLATE = '''HTTP/1.1 200 OK
 </head>
 <body>
 
-<h1>Get-it</h1>
+<img src="img/logo-getit.png">
 <p>Como o Post-it, mas com outro verbo</p>
+
+<ul>
+{notes}
+</ul>
+
+</body>
+</html>
 
 </body>
 </html>
@@ -34,7 +50,19 @@ while True:
     print('*'*100)
     print(request)
 
-    client_connection.sendall(RESPONSE_TEMPLATE.encode())
+    route = extract_route(request)
+    filepath = CUR_DIR / route
+    if filepath.is_file():
+        response = 'HTTP/1.1 200 OK\n\n'.encode() + read_file(filepath)
+    else:
+        notes_li = [
+            NOTE_TEMPLATE.format(title=dados['titulo'], details=dados['detalhes'])
+            for dados in load_data('notes.json')
+        ]
+        notes = '\n'.join(notes_li)
+
+        response = RESPONSE_TEMPLATE.format(notes=notes).encode()
+    client_connection.sendall(response)
 
     client_connection.close()
 
