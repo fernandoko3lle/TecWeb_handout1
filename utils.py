@@ -18,7 +18,7 @@ def load_template(nome):
         return file.read()
     
 def adiciona_note(note):  
-    y = Path("data")/"notes,json"
+    y = Path("data")/"notes.json"
     if y.exists():
         with open(y, 'r') as file:
             data = json.load(file)
